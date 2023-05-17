@@ -67,8 +67,25 @@ router.get('/edit/:id', async (req, res) => {
 });
 
 router.post('/update/:id', async (req, res) => {
-  await User.findByIdAndUpdate(req.params.id, req.body);
-  res.redirect('/users');
+  const { name, password, email } = req.body;
+  
+  try {
+    // Generar el hash de Bcrypt para la nueva contraseña
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Actualizar el usuario en la base de datos
+    await User.findByIdAndUpdate(req.params.id, {
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    res.redirect('/users');
+  } catch (error) {
+    // Manejar errores
+    res.status(500).send('Error al actualizar el usuario');
+  }
 });
 
 router.get('/delete/:id', async (req, res) => {
