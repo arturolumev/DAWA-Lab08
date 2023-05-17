@@ -1,6 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
+const { body, validationResult } = require('express-validator');
+//const app = express();
+
 const router = express.Router();
 
 const userSchema = new mongoose.Schema({
@@ -18,7 +21,23 @@ router.get('/', async (req, res) => {
 
 const bcrypt = require('bcrypt');
 
-router.post('/', async (req, res) => {
+router.post('/',[
+  body('name')
+  .notEmpty().withMessage('El nombre es obligatorio')
+  .trim(),
+  body('email')
+    .isEmail().withMessage('El email no es válido')
+    .normalizeEmail(),
+  body('password')
+    .notEmpty().withMessage('La contraseña es obligatoria')
+    .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(error => error.msg);
+    const users = await User.find();
+    return res.render('index', { users, errors: errorMessages });
+  }
 
   const { name, password, email } = req.body;
 
